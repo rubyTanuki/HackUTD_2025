@@ -56,7 +56,7 @@
 
 <script>
     async function uploadData() {
-        try {
+      /*  try {
             const response = await fetch(, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -65,7 +65,7 @@
             console.log(await response.json());
         } catch (error) {
             console.error("Error:", error);
-        }
+        }*/
     }
 </script>
         
