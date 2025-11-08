@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload</title>
+    <!-- we need to change the stykle but here is the basics-->
+    <style>
+    
+        body {
+            font-family: Arial, sans-serif;
+            margin: 50px;
+        }
+        h2 {
+           margin-bottom: 20px; 
+        }
+        textarea, input[type="file"] {
+            width: 100%;
+            margin-bottom: 20px;
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .upload-container {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            text-align: center;
+        }
+        .upload-container:hover {
+            border-color: #aaa;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        label {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        label:hover {
+            background-color: #218838;
+        }
+    </style>
+<body>
+    <h2>Upload Your File</h2>
+    <textarea id="dataInput" rows="10" placeholder="Enter your data here..."></textarea>
+    <input type="file" id="fileInput" accept=".pdf"/>  
+    
+
+<script>
+    async function uploadData() {
+        try {
+            const response = await fetch(, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            console.log(await response.json());
+        } catch (error) {
+            console.error("Error:", error);
+        }
+    }
+</script>
+        
