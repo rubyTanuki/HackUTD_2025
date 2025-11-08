@@ -53,29 +53,97 @@
         label:hover {
             background-color: #218838;
         }
+        #fileStatus {
+            margin-top: 12px;    
+            font-size: 15px;
+            color: #333;
+        }
+        .upload-button-wrapper {
+            text-align: center;
+            margin-top: 25px; /* pushes it below the box */
+            }
+
+
     </style>
 </head>
 <body>
     <h2>Upload Your File</h2>
-    <textarea id="dataInput" rows="10" placeholder="Enter your data here..."></textarea>
-    <input type="file" id="fileInput" accept=".pdf"/>  
+    <textarea id="dataInput" rows="10" placeholder="Enter your Thesis here..."></textarea>
     
     <div class="upload-container">
+        
         <label for="fileInput">Choose PDF File</label>
         <input type="file" id="fileInput" accept=".pdf" />
+        <div id="fileStatus">No file selected.</div>
       </div>
+      
+      <div class="upload-button-wrapper">
+        <button onclick="uploadData()">Upload</button>
+      </div>
+      
 <script>
     async function uploadData() {
-      /*  try {
-            const response = await fetch(, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-            console.log(await response.json());
+        const textarea = document.getElementById("dataInput");
+        const fileInput = document.getElementById("fileInput");
+        const fileStatus = document.getElementById("fileStatus");
+        const output = document.getElementById("output");
+
+        const textData = textarea.value.trim();
+        const file = fileInput.files[0];
+
+        if (!textData && !file) {
+            alert("Please type something or upload a file before sending.");
+            return;
+        }
+
+        output.textContent = "Uploading...";
+
+        try {
+            if (file) {
+                const formData = new FormData();
+                formData.append("file", file);
+                formData.append("description", textData);
+
+                // Replace with your actual backend endpoint
+                const response = await fetch("http://localhost:5000/api/upload", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                const data = await response.json();
+                output.textContent = JSON.stringify(data, null, 2);
+            } else {
+                const payload = { text: textData };
+
+                const response = await fetch("http://localhost:5000/api/analyze", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                });
+
+                const data = await response.json();
+                output.textContent = JSON.stringify(data, null, 2);
+            }
         } catch (error) {
-            console.error("Error:", error);
-        }*/
+            output.textContent = "Error: " + error.message;
+        }
     }
+
+    document.getElementById("fileInput").addEventListener("change", () => {
+        const file = document.getElementById("fileInput").files[0];
+        const fileStatus = document.getElementById("fileStatus");
+
+        if (file) {
+            const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            fileStatus.textContent = `File uploaded: ${file.name} (${sizeMB} MB)`;
+            fileStatus.style.color = "green";
+        } else {
+            fileStatus.textContent = "No file selected.";
+            fileStatus.style.color = "#333";
+        }
+    });
 </script>
+
+<!-- Add an output element to display the result -->
+<div id="output" style="margin-top: 20px; white-space: pre-wrap;"></div>
         
