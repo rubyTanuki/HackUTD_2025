@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thesis Results</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #fafafa;
+      margin: 40px;
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 30px;
+    }
+
+    #thesis-box, .card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 20px;
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+
+    .quote {
+      font-style: italic;
+      font-size: 18px;
+      color: #555;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      margin-bottom: 20px;
+      transition: transform 0.2s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+    }
+
+    .keywords {
+      color: #007bff;
+      font-size: 14px;
+    }
+
+    .why {
+      color: #555;
+      font-style: italic;
+      margin-top: 8px;
+    }
+
+    a {
+      color: #28a745;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <!-- 🧠 Thesis section -->
+  <div id="thesis-box">
+    <h2>Your Thesis</h2>
+    <p id="thesisText"></p>
+  </div>
+
+  <!-- 🧩 Articles section -->
+  <div id="results">
+    <h2>Recommended Articles</h2>
+    <div id="quote" class="quote"></div>
+  </div>
+
+  <script>
+    // 🧠 Get data saved from upload page
+    const thesis = localStorage.getItem("uploadedThesis");
+    const responseData = JSON.parse(localStorage.getItem("backendResponse"));
+
+    // Display thesis text
+    document.getElementById("thesisText").textContent = thesis || "No thesis found.";
+
+    // Display the quote
+    document.getElementById("quote").textContent = responseData?.quote || "";
+
+    // Display mock article cards
+    if (responseData && responseData.results) {
+      const resultsDiv = document.getElementById("results");
+
+      responseData.results.forEach(article => {
+        const card = document.createElement("div");
+        card.className = "card";
+
+        card.innerHTML = `
+          <h3><a href="${article.link}" target="_blank">${article.title}</a></h3>
+          <p>${article.description}</p>
+          <p class="keywords">Keywords: ${article.keywords.join(", ")}</p>
+          <p class="why">Why chosen: ${article.why_chosen}</p>
+        `;
+
+        resultsDiv.appendChild(card);
+      });
+    } else {
+      document.getElementById("results").innerHTML += "<p>No results found.</p>";
+    }
+  </script>
+</body>
+</html>

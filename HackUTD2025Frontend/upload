@@ -81,6 +81,10 @@
         <button onclick="uploadData()">Upload</button>
       </div>
       
+<!-- Add an output element to display the result -->
+<div id="output" style="margin-top: 20px; white-space: pre-wrap;"></div>
+
+
 <script>
     async function uploadData() {
         const textarea = document.getElementById("dataInput");
@@ -97,8 +101,42 @@
         }
 
         output.textContent = "Uploading...";
+        const mockResponse = {
+        response_code: "200",
+        quote: "“Artificial Intelligence is not a threat, but a tool — its impact depends on the hands that use it.”",
+        results: [
+          {
+            title: "AI and the Future of Learning",
+            description: "Examines how AI tools adapt to student learning styles.",
+            keywords: ["AI", "Education", "Adaptive Learning"],
+            why_chosen: "Matches your thesis focus on personalization.",
+            link: "#"
+          },
+          {
+            title: "Ethics in Machine Learning Systems",
+            description: "Explores fairness and ethical dilemmas in AI.",
+            keywords: ["Ethics", "Bias", "Machine Learning"],
+            why_chosen: "Relates to your concern about bias and responsibility.",
+            link: "#"
+          },
+          {
+            title: "The Role of Automation in Modern Classrooms",
+            description: "Studies how automation transforms teaching approaches.",
+            keywords: ["Automation", "Teaching", "Innovation"],
+            why_chosen: "Shows real-world applications of your thesis ideas.",
+            link: "#"
+          }
+        ]
+      };
 
-        try {
+      
+      localStorage.setItem("uploadedThesis", textData);
+      localStorage.setItem("backendResponse", JSON.stringify(mockResponse));
+
+     
+      window.location.href = "results.html"
+
+       /* try {
             if (file) {
                 const formData = new FormData();
                 formData.append("file", file);
@@ -126,7 +164,7 @@
             }
         } catch (error) {
             output.textContent = "Error: " + error.message;
-        }
+        }*/
     }
 
     document.getElementById("fileInput").addEventListener("change", () => {
@@ -143,7 +181,3 @@
         }
     });
 </script>
-
-<!-- Add an output element to display the result -->
-<div id="output" style="margin-top: 20px; white-space: pre-wrap;"></div>
-        
