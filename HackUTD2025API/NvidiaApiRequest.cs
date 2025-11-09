@@ -65,11 +65,15 @@ public class ArticleDetails
     [JsonPropertyName("abstract")]
     public string Abstract { get; set; }
 
-    [JsonPropertyName("release_date")]
-    public string ReleaseDate { get; set; }
+    [JsonPropertyName("release_year")]
+    public string ReleaseYear { get; set; }
 
     [JsonPropertyName("publisher")]
     public string Publisher { get; set; }
+
     [JsonPropertyName("link")]
     public string Link { get; set; }
+
+    [JsonPropertyName("relevance")]
+    public double? Relevance { get; set; }
 }

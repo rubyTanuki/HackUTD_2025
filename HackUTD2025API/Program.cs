@@ -7,6 +7,7 @@ builder.Services.AddControllers();
 builder.Services.AddHttpClient();
 
 builder.Services.AddScoped<NvidiaDataExtractor>();
+builder.Services.AddScoped<NeMoEmbeddingService>();
 
 var app = builder.Build();
 
