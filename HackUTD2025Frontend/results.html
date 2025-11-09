@@ -161,8 +161,14 @@
         articlesDiv.appendChild(card);
       });
     } else {
-      articlesDiv.innerHTML = "<p class='text-gray-400'>No articles found.</p>";
-    }
+  // 🔥 Instead of "No articles found", print the backend JSON verbatim
+  articlesDiv.innerHTML = `
+    <h3 class="text-blue-400 text-xl mb-3 text-center">Raw JSON Response</h3>
+    <pre class="bg-gray-900 text-gray-300 p-4 rounded-lg overflow-x-auto text-sm whitespace-pre-wrap">
+${JSON.stringify(responseData, null, 2)}
+    </pre>
+  `;
+}
 
     // Animations
     window.addEventListener("load", () => {
