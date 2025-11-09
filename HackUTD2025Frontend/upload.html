@@ -5,136 +5,113 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Thesis Upload</title>
 
-  <!-- Tailwind + Flowbite + Bootstrap Icons -->
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/flowbite@1.6.5/dist/flowbite.min.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
   <style>
     body {
+      background: #0f172a;
       padding: 40px;
-      background: #0f172a; /* dark blue gray */
     }
   </style>
 </head>
-<body class="dark:bg-gray-900 text-white">
+<body class="text-white dark:bg-gray-900">
 
   <div class="max-w-3xl mx-auto">
-    <h2 class="text-3xl font-semibold text-white mb-8 text-center">Upload or Paste Your Thesis</h2>
+    <h2 class="text-3xl font-semibold mb-8 text-center">Upload or Paste Your Thesis</h2>
 
-    <!-- Text Editor -->
     <form onsubmit="event.preventDefault(); uploadData();">
       <div class="w-full mb-6 border border-gray-700 rounded-lg bg-gray-800 shadow-md">
         <div class="flex items-center justify-between px-3 py-2 border-b border-gray-700 bg-gray-900 rounded-t-lg">
           <div class="flex items-center space-x-2">
-            <!-- 📎 File upload -->
-            <label for="fileInput" class="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-sm cursor-pointer">
+            <label for="fileInput" class="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded cursor-pointer">
               <i class="bi bi-paperclip text-lg"></i>
-              <span class="sr-only">Attach File</span>
               <input id="fileInput" type="file" class="hidden" accept=".txt" />
             </label>
           </div>
-          <p class="text-xs text-gray-400">or just paste your thesis below</p>
+          <p class="text-xs text-gray-400">or paste below</p>
         </div>
 
-        <!-- Textarea -->
         <div class="px-4 py-3 bg-gray-800 rounded-b-lg">
           <textarea id="dataInput" rows="10"
-            class="block w-full px-0 text-base text-white bg-gray-800 border-0 focus:ring-0 placeholder-gray-400"
+            class="block w-full text-white bg-gray-800 border-0 focus:ring-0 placeholder-gray-400"
             placeholder="Paste or type your thesis here..." required></textarea>
         </div>
       </div>
 
-      <!-- File Status -->
       <p id="fileStatus" class="text-center text-gray-400 mb-6">No file selected.</p>
 
-      <!-- Upload Button -->
       <div class="text-center">
         <button type="submit"
-          class="px-8 py-3 text-base font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg focus:ring-4 focus:ring-blue-400 transition">
+          class="px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg focus:ring-4 focus:ring-blue-400 transition">
           Upload
         </button>
       </div>
     </form>
 
-    <!-- Debug Output -->
-    <pre id="output" class="mt-8 p-4 bg-gray-900 text-gray-300 rounded-lg overflow-x-auto text-sm whitespace-pre-wrap"></pre>
+    <pre id="output" class="mt-8 p-4 bg-gray-900 text-gray-300 rounded overflow-x-auto text-sm whitespace-pre-wrap"></pre>
   </div>
 
   <script>
-    // 📎 Handle file upload (optional)
+    //  Read uploaded text file
     document.getElementById("fileInput").addEventListener("change", async () => {
       const file = document.getElementById("fileInput").files[0];
-      const fileStatus = document.getElementById("fileStatus");
+      const status = document.getElementById("fileStatus");
       const textarea = document.getElementById("dataInput");
 
       if (file) {
-        const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
-        fileStatus.textContent = `File attached: ${file.name} (${sizeMB} MB)`;
-        fileStatus.classList.add("text-green-400");
-
-        // Read .txt file into textarea
-        const text = await file.text();
-        textarea.value = text;
+        status.textContent = `File attached: ${file.name}`;
+        status.classList.add("text-green-400");
+        textarea.value = await file.text();
       } else {
-        fileStatus.textContent = "No file selected.";
-        fileStatus.classList.remove("text-green-400");
+        status.textContent = "No file selected.";
+        status.classList.remove("text-green-400");
       }
     });
 
-    // 🌐 Call your backend API
+    // Call Backend API
     async function callAPI(thesis) {
       try {
         const response = await fetch("https://oncologic-unpopularly-shirley.ngrok-free.dev/getArticles", {
           method: "POST",
-          headers: {
+          headers: { 
             "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ thesis: thesis }),
+            "ngrok-skip-browser-warning": "true"
+           },
+
+          body: JSON.stringify({"thesis": thesis }),
+          redirect: 'follow'
         });
 
-        if (!response.ok) {
-          throw new Error(`Backend error: ${response.status}`);
-        }
-
-        const data = await response.json();
-        return data;
-      } catch (error) {
-        console.error("❌ Error calling backend:", error);
-        alert("Could not connect to backend. Please check your connection or try again.");
+        if (!response.ok) throw new Error(`Server error: ${response.status}`);
+        return await response.json();
+      } catch (err) {
+        console.error("Error:", err);
+        alert("Failed to reach backend. Check if ngrok is active and run via http://localhost (not file://)." + err.message);
         return null;
       }
     }
 
-    // 🚀 Upload and send data
+    // Upload thesis
     async function uploadData() {
-      const textarea = document.getElementById("dataInput");
+      const textData = document.getElementById("dataInput").value.trim();
       const output = document.getElementById("output");
-      const textData = textarea.value.trim();
+      if (!textData) return alert("Please paste or type your thesis before uploading!");
 
-      if (!textData) {
-        alert("Please paste or type your thesis before uploading!");
-        return;
-      }
+      output.textContent = "Uploading...";
 
-      output.textContent = "Uploading your thesis... please wait.";
-
-      // Call backend API
       const backendResponse = await callAPI(textData);
-
       if (!backendResponse) {
-        output.textContent = "Upload failed. Please try again.";
+        output.textContent = "Connection failed.";
         return;
       }
 
-      // Save thesis + backend data to localStorage
       localStorage.setItem("uploadedThesis", textData);
       localStorage.setItem("backendResponse", JSON.stringify(backendResponse));
 
-      output.textContent = "Upload successful! Redirecting to results...";
-      setTimeout(() => {
-        window.location.href = "results.html";
-      }, 1000);
+      output.textContent = "Success! Redirecting...";
+      setTimeout(() => window.location.href = "results.html", 1000);
     }
   </script>
 </body>
