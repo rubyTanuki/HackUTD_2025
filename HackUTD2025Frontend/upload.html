@@ -89,7 +89,7 @@
   </div>
 
   <script>
-    // 📎 File input preview
+    // File input preview
     document.getElementById("fileInput").addEventListener("change", () => {
       const file = document.getElementById("fileInput").files[0];
       const fileStatus = document.getElementById("fileStatus");
@@ -127,7 +127,7 @@
       }
     }
   
-    // 🚀 Upload Function
+    // Upload Function
     async function uploadData() {
       const textarea = document.getElementById("dataInput");
       const textData = textarea.value.trim();
@@ -141,7 +141,7 @@
         return;
       }
   
-      // 🟦 Show progress bar
+      // Show progress bar
       loadingBar.style.width = "0%";
       loadingBar.className = "h-1.5 bg-red-600 rounded-full transition-all duration-500";
       loadingContainer.classList.remove("hidden");
@@ -149,12 +149,12 @@
   
       let progress = 0;
       const timer = setInterval(() => {
-        // ⏳ Slow + smooth increase
+        //  Slow + smooth increase
         progress += Math.random() * 3; // 1–3% each step
         if (progress > 90) progress = 90; // stop at 90% until backend done
         loadingBar.style.width = `${progress}%`;
   
-        // 🎨 Color gradient
+        //  Color gradient
         if (progress < 30) loadingBar.className = "h-1.5 bg-red-600 rounded-full transition-all duration-500";
         else if (progress < 60) loadingBar.className = "h-1.5 bg-yellow-500 rounded-full transition-all duration-500";
         else if (progress < 85) loadingBar.className = "h-1.5 bg-lime-500 rounded-full transition-all duration-500";
@@ -169,15 +169,15 @@
   
         if (!backendResponse) {
           clearInterval(timer);
-          loadingText.textContent = "❌ Connection failed.";
+          loadingText.textContent = "Connection failed.";
           return;
         }
   
-        // ✅ Backend done → complete bar
+        // Backend done → complete bar
         clearInterval(timer);
         loadingBar.style.width = "100%";
         loadingBar.className = "h-1.5 bg-blue-600 rounded-full transition-all duration-700";
-        loadingText.textContent = `✅ Upload complete (${duration}s)! Redirecting...`;
+        loadingText.textContent = `Upload complete (${duration}s)! Redirecting...`;
   
         // Save to localStorage + redirect
         localStorage.setItem("uploadedThesis", textData);
@@ -187,7 +187,7 @@
   
       } catch (error) {
         clearInterval(timer);
-        loadingText.textContent = "❌ Error connecting to backend.";
+        loadingText.textContent = "Error connecting to backend.";
         output.textContent = `Error: ${error}`;
         console.error(error);
       }

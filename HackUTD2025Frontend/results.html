@@ -5,27 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Thesis Results</title>
 
-  <!-- Tailwind + Bootstrap Icons -->
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
   <style>
+    /* ------------------ PAGE BACKGROUND ------------------ */
     body {
       background: #0f172a;
       padding: 0 40px 40px 40px;
       overflow-x: hidden;
     }
 
+    /* ------------------ PANEL ANIMATIONS ------------------ */
     @keyframes thesisSlideLeft {
       0% { left: 50%; transform: translateX(-50%) scale(1); width: 48rem; }
       100% { left: 0; transform: translateX(0) scale(0.95); width: 40%; }
     }
-
     @keyframes resultsSlideIn {
       0% { transform: translateX(120%); opacity: 0; }
       100% { transform: translateX(0); opacity: 1; }
     }
-
     .animate-thesis-slide-left {
       animation: thesisSlideLeft 1.3s cubic-bezier(0.77, 0, 0.175, 1) forwards;
     }
@@ -33,6 +32,7 @@
       animation: resultsSlideIn 1.1s ease-out forwards;
     }
 
+    /* ------------------ DROPDOWN & ABSTRACT ------------------ */
     .expandable {
       transition: max-height 0.4s ease, opacity 0.4s ease;
       overflow: hidden;
@@ -43,85 +43,108 @@
       max-height: 300px;
       opacity: 1;
     }
+
     .rotate {
       transition: transform 0.3s ease;
     }
     .rotate.open {
       transform: rotate(180deg);
     }
+
+    /* ------------------ ABSTRACT TEXT ------------------ */
+    .abstract {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      overflow: hidden;
+      transition: all 0.4s ease;
+      cursor: pointer;
+    }
+    .abstract:hover {
+      -webkit-line-clamp: 5;
+    }
+    .abstract.expanded {
+      display: block;
+      -webkit-line-clamp: unset;
+      overflow: visible;
+    }
+
+    /* ------------------ UNDERLINE LINK STYLE ------------------ */
+    .article-link {
+      text-decoration: underline;
+      text-decoration-color: #3b82f6; /* Tailwind blue-500 */
+      text-underline-offset: 3px;
+      transition: color 0.3s ease, text-decoration-color 0.3s ease;
+    }
+    .article-link:hover {
+      color: #60a5fa; /* lighter blue */
+      text-decoration-color: #60a5fa;
+    }
   </style>
 </head>
-<body class="text-white dark:bg-gray-900">
-</head>
-<body class="text-white dark:bg-gray-900">
-<!-- Navbar -->
-<nav class="bg-gray-900 border-b border-gray-700 shadow-md sticky top-0 z-50">
-  <div class="max-w-7xl mx-auto px-4 py-1 flex items-center justify-between">
-    
-    <!-- Left: Logo + Links -->
-    <div class="flex items-center space-x-6">
-      <!-- Logo -->
-      <img 
-        src="/images/IMG_0222.PNG" 
-        alt="Logo" 
-        class="w-12 h-12 object-cover"
-      >
-     <!-- Title -->
-    <span class="text-xl font-semibold text-white tracking-wide">
-   Scholar Scraper
-   </span>
 
-      <!-- Links -->
-      <div class="flex items-center space-x-8">
-        <a href="upload.html" id="nav-home"
-           class="text-gray-300 font-medium transition border-b-2 border-transparent pb-1 hover:text-blue-400 hover:border-blue-400">
-           Home
-        </a>
-        <a href="about.html" id="nav-about"
-           class="text-gray-300 font-medium transition border-b-2 border-transparent pb-1 hover:text-blue-400 hover:border-blue-400">
-           About Us
-        </a>
+<body class="text-white dark:bg-gray-900">
+  <!-- ------------------ NAVBAR ------------------ -->
+  <nav class="bg-gray-900 border-b border-gray-700 shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-1 flex items-center justify-between">
+      <div class="flex items-center space-x-6">
+        <img src="/images/IMG_0222.PNG" alt="Logo" class="w-12 h-12 object-cover">
+        <span class="text-xl font-semibold text-white tracking-wide">
+          Scholar Scraper
+        </span>
+
+        <div class="flex items-center space-x-8">
+          <a href="upload.html"
+             class="text-gray-300 font-medium transition border-b-2 border-transparent pb-1 hover:text-blue-400 hover:border-blue-400">
+             Home
+          </a>
+          <a href="about.html"
+             class="text-gray-300 font-medium transition border-b-2 border-transparent pb-1 hover:text-blue-400 hover:border-blue-400">
+             About Us
+          </a>
+        </div>
       </div>
     </div>
+  </nav>
+  <div class="mt-6"></div>
 
-   
-  </div>
-</nav>
-<div class="mt-6"></div>
-
-
-
-
+  <!-- ------------------ MAIN CONTENT ------------------ -->
   <div class="relative max-w-7xl mx-auto min-h-[500px] z-10">
     <!-- Thesis panel -->
-    <div id="thesis-box" class="absolute top-0 left-1/2 -translate-x-1/2 opacity-100 w-full max-w-3xl">
+    <div id="thesis-box"
+         class="absolute top-0 left-1/2 -translate-x-1/2 opacity-100 w-full max-w-3xl">
       <h2 class="text-3xl font-semibold mb-4 text-blue-400 text-center">Your Thesis</h2>
       <div class="w-full mb-6 border border-gray-700 rounded-lg bg-gray-800 shadow-md">
         <div class="px-4 py-3 bg-gray-800 rounded-b-lg">
           <textarea id="thesisText" rows="8" readonly
-            class="block w-full text-white bg-gray-800 border-0 resize-none"></textarea>
+                    class="block w-full text-white bg-gray-800 border-0 resize-none"></textarea>
         </div>
       </div>
     </div>
 
     <!-- Results panel -->
-    <div id="results" class="absolute top-0 right-0 w-[55%] bg-gray-800 border border-gray-700 rounded-xl p-6 shadow-lg opacity-0">
-      <h2 class="text-2xl font-semibold mb-4 text-blue-400 text-center">Recommended Articles</h2>
-      <div id="quote" class="italic text-gray-400 mb-5 border-l-4 border-blue-500 pl-4 text-base"></div>
+    <div id="results"
+         class="absolute top-0 right-0 w-[55%] bg-gray-800 border border-gray-700 rounded-xl p-6 shadow-lg opacity-0">
+      <h2 class="text-2xl font-semibold mb-4 text-blue-400 text-center">
+        Recommended Articles
+      </h2>
+      <div id="quote"
+           class="italic text-gray-400 mb-5 border-l-4 border-blue-500 pl-4 text-base"></div>
       <div id="articles"></div>
     </div>
   </div>
 
-  <!-- Back button -->
+  <!-- ------------------ BACK BUTTON ------------------ -->
   <div class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50">
     <button onclick="window.location.href='upload.html'"
-      class="px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg focus:ring-4 focus:ring-blue-400 transition">
-      <i class="bi bi-arrow-left"></i> Back
+            class="px-8 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg focus:ring-4 focus:ring-blue-400 transition">
+      ← Back
     </button>
   </div>
 
+  <!-- ------------------ SCRIPT ------------------ -->
   <script>
-    //  Load data from localStorage
+    // Load from localStorage
     const thesis = localStorage.getItem("uploadedThesis");
     const responseData = JSON.parse(localStorage.getItem("backendResponse") || "{}");
     console.log("📦 Backend response received:", responseData);
@@ -131,104 +154,86 @@
     const quoteDiv = document.getElementById("quote");
     const articlesDiv = document.getElementById("articles");
 
-    // Handle different backend structures
+    // Handle possible structures
     let articles = [];
-    if (Array.isArray(responseData)) {
-      articles = responseData;
-    } else if (Array.isArray(responseData.results)) {
-      articles = responseData.results;
-    } else if (Array.isArray(responseData.articles)) {
-      articles = responseData.articles;
-    } else if (responseData.data && Array.isArray(responseData.data)) {
-      articles = responseData.data;
-    }
+    if (Array.isArray(responseData)) articles = responseData;
+    else if (Array.isArray(responseData.results)) articles = responseData.results;
+    else if (Array.isArray(responseData.articles)) articles = responseData.articles;
+    else if (Array.isArray(responseData.data)) articles = responseData.data;
 
     if (responseData.quote) quoteDiv.textContent = responseData.quote;
 
-    //  Render articles
+    // Build articles
     if (articles.length > 0) {
-  // Sort by relevance (highest first)
-  articles.sort((a, b) => (b.relevance || 0) - (a.relevance || 0));
+      articles.sort((a, b) => (b.relevance || 0) - (a.relevance || 0));
 
-  articles.forEach((article, i) => {
-    const card = document.createElement("div");
-    card.className =
-      "bg-gray-900 border border-gray-700 rounded-lg p-5 mb-5 shadow-md hover:shadow-lg transition";
+      articles.forEach((article, i) => {
+        const card = document.createElement("div");
+        card.className =
+          "bg-gray-900 border border-gray-700 rounded-lg p-5 mb-5 shadow-md hover:shadow-lg transition";
 
-    const title = article.title || `Article ${i + 1}`;
-    const authors = Array.isArray(article.authors)
-      ? article.authors.join(", ")
-      : article.authors || "Unknown Author";
-    const abstract = article.abstract || article.description || "No abstract available.";
-    const publisher = article.publisher || "Unknown Publisher";
-    const year = article.release_year || article.year || "N/A";
-    const relevanceValue = parseFloat(article.relevance) || 0;
-    const link = article.link || article.url || "#";
+        const relevanceValue = parseFloat(article.relevance) || 0;
+        let relevanceColor = "bg-gray-600";
+        if (relevanceValue >= 80) relevanceColor = "bg-green-600";
+        else if (relevanceValue >= 70) relevanceColor = "bg-lime-500";
+        else if (relevanceValue >= 65) relevanceColor = "bg-yellow-500";
+        else if (relevanceValue >= 55) relevanceColor = "bg-orange-500";
+        else relevanceColor = "bg-red-600";
 
-    // 🎨 Color logic for relevance
-    let relevanceColor = "bg-gray-600";
-    if (relevanceValue >= 80) relevanceColor = "bg-green-600";
-    else if (relevanceValue >= 70) relevanceColor = "bg-lime-500";  
-    else if (relevanceValue >= 65) relevanceColor = "bg-yellow-500";
-    else if (relevanceValue >= 55) relevanceColor = "bg-orange-500";
-    else relevanceColor = "bg-red-600";
+        card.innerHTML = `
+          <div class="flex justify-between items-start">
+            <div class="flex-1">
+              <h3 class="text-lg font-semibold text-white mb-1">
+                <a href="${article.link || article.url || "#"}" target="_blank"
+                   class="article-link">
+                  ${article.title || `Article ${i + 1}`}
+                </a>
+              </h3>
+              <p class="text-gray-400 text-sm">${article.authors?.join(", ") || "Unknown Author"}</p>
+            </div>
+            <div class="flex flex-col items-end">
+              <span class="px-2 py-1 text-sm font-medium text-white rounded ${relevanceColor}">
+                ${relevanceValue}%
+              </span>
+              <button class="mt-2 text-gray-400 hover:text-blue-400 transition">
+                <i class="bi bi-chevron-down rotate text-lg"></i>
+              </button>
+            </div>
+          </div>
 
-    card.innerHTML = `
-  <div class="flex justify-between items-start">
-    <div class="flex-1">
-      <h3 class="text-lg font-semibold text-white mb-1 flex items-center">
-        <a href="${article.link}" target="_blank" 
-           class="hover:text-blue-400 flex items-center group">
-          ${article.title}
-          <i class="bi bi-box-arrow-up-right text-gray-400 ml-2 text-sm opacity-70 group-hover:text-blue-400 group-hover:opacity-100 transition"></i>
-        </a>
-      </h3>
-      <p class="text-gray-400 text-sm">${article.authors?.join(", ") || "Unknown Author"}</p>
-    </div>
-    <div class="flex flex-col items-end">
-      <span class="px-2 py-1 text-sm font-medium text-white rounded ${relevanceColor}">
-        ${article.relevance}%
-      </span>
-      <button class="mt-2 text-gray-400 hover:text-blue-400 transition">
-        <i class="bi bi-chevron-down text-lg"></i>
-      </button>
-    </div>
-  </div>
+          <p class="text-gray-300 mt-2 text-sm abstract">${article.abstract || "No abstract available."}</p>
 
-  <p class="text-gray-300 mt-2 text-sm abstract line-clamp-2">${article.abstract}</p>
+          <div class="expandable mt-3 text-sm text-gray-300">
+            <p><strong>Release year:</strong> ${article.release_year || article.year || "N/A"}</p>
+            <p><strong>Publisher:</strong> ${article.publisher || "N/A"}</p>
+          </div>
+        `;
 
-  <div class="expandable mt-3 text-sm text-gray-300">
-    <p><strong>Release year:</strong> ${article.release_year || "N/A"}</p>
-    <p><strong>Publisher:</strong> ${article.publisher || "N/A"}</p>
-  </div>
-`;
+        // Toggle open
+        const button = card.querySelector("button");
+        const expandable = card.querySelector(".expandable");
+        const abstractEl = card.querySelector(".abstract");
+        const icon = card.querySelector(".rotate");
 
+        button.addEventListener("click", () => {
+          expandable.classList.toggle("open");
+          abstractEl.classList.toggle("expanded");
+          icon.classList.toggle("open");
+        });
 
-    // expand/collapse
-    const button = card.querySelector("button");
-    const expandable = card.querySelector(".expandable");
-    const abstractEl = card.querySelector(".abstract");
-    const icon = card.querySelector(".rotate");
-
-    button.addEventListener("click", () => {
-      expandable.classList.toggle("open");
-      abstractEl.classList.toggle("open");
-      icon.classList.toggle("open");
-    });
-
-    articlesDiv.appendChild(card);
-  });
-} else {
-  //  Instead of "No articles found", print the backend JSON verbatim
-  articlesDiv.innerHTML = `
-    <h3 class="text-blue-400 text-xl mb-3 text-center">Raw JSON Response</h3>
-    <pre class="bg-gray-900 text-gray-300 p-4 rounded-lg overflow-x-auto text-sm whitespace-pre-wrap">
+        articlesDiv.appendChild(card);
+      });
+    } else {
+      // Print raw JSON if no valid articles
+      articlesDiv.innerHTML = `
+        <h3 class="text-blue-400 text-xl mb-3 text-center">Raw JSON Response</h3>
+        <pre class="bg-gray-900 text-gray-300 p-4 rounded-lg overflow-x-auto text-sm whitespace-pre-wrap">
 ${JSON.stringify(responseData, null, 2)}
-    </pre>
-  `;
-}
+        </pre>
+      `;
+    }
 
-    // Animations
+    // Panel animations
     window.addEventListener("load", () => {
       setTimeout(() => document.getElementById("thesis-box").classList.add("animate-thesis-slide-left"), 600);
       setTimeout(() => document.getElementById("results").classList.add("animate-results-slide-in"), 800);
