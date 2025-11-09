@@ -54,5 +54,5 @@ TestResult.xml
 nunit-*.xml
 
 .DS_Store
-key.txt
-key2.txt
+
+appsettings.*
