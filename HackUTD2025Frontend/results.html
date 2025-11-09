@@ -12,7 +12,7 @@
   <style>
     body {
       background: #0f172a;
-      padding: 40px;
+      padding: 0 40px 40px 40px;
       overflow-x: hidden;
     }
 
@@ -52,36 +52,44 @@
   </style>
 </head>
 <body class="text-white dark:bg-gray-900">
-  <nav class="bg-gray-900 border-b border-gray-700 shadow-md sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-1 py-1 flex items-center justify-between">
-      
+</head>
+<body class="text-white dark:bg-gray-900">
+<!-- Navbar -->
+<nav class="bg-gray-900 border-b border-gray-700 shadow-md sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto px-4 py-1 flex items-center justify-between">
     
-      <div class="flex items-center space-x-7">
-       
-        <img 
-          src="/images/IMG_0222.PNG" 
-          alt="Logo" 
-          class="w-16 h-16 object-cover"
-        >
-        <span class="text-xl font-semibold text-white tracking-wide">
-          Scholar Scraper
-        </span>
-        <!-- Links -->
-        <div class="flex items-center space-x-8">
-          <a href="upload.html"
-             class="text-blue-400 font-medium transition border-b-2 border-blue-400 pb-1 hover:text-blue-300">
-             Home
-          </a>
-          <a href="about.html"
-             class="text-gray-300 font-medium transition border-b-2 border-transparent hover:text-blue-400 hover:border-blue-400 pb-1">
-             About Us
-          </a>
-        </div>
+    <!-- Left: Logo + Links -->
+    <div class="flex items-center space-x-6">
+      <!-- Logo -->
+      <img 
+        src="/images/IMG_0222.PNG" 
+        alt="Logo" 
+        class="w-12 h-12 object-cover"
+      >
+     <!-- Title -->
+    <span class="text-xl font-semibold text-white tracking-wide">
+   Scholar Scraper
+   </span>
+
+      <!-- Links -->
+      <div class="flex items-center space-x-8">
+        <a href="upload.html" id="nav-home"
+           class="text-gray-300 font-medium transition border-b-2 border-transparent pb-1 hover:text-blue-400 hover:border-blue-400">
+           Home
+        </a>
+        <a href="about.html" id="nav-about"
+           class="text-gray-300 font-medium transition border-b-2 border-transparent pb-1 hover:text-blue-400 hover:border-blue-400">
+           About Us
+        </a>
       </div>
-  
     </div>
-  </nav>
-  <div class="mt-6"></div>
+
+   
+  </div>
+</nav>
+<div class="mt-6"></div>
+
+
 
 
   <div class="relative max-w-7xl mx-auto min-h-[500px] z-10">
