@@ -4,6 +4,7 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using AngleSharp.Html.Parser;
 using System.Net.Http; // We need this now!
+using System.Threading;
 
 [ApiController]
 public class ThesisAPIController : ControllerBase
@@ -32,60 +33,103 @@ public class ThesisAPIController : ControllerBase
         // 1. Get thesis
         string thesis = json["thesis"].ToString();
 
-        List<float>? liveThesisVector = await _embeddingService.GetEmbeddingAsync(thesis, "query");
+        // Start thesis embedding and keyword generation concurrently
+        var thesisEmbeddingTask = _embeddingService.GetEmbeddingAsync(thesis, "query");
+        var keywordsTask = GetKeywordsAsync(thesis);
 
+        await Task.WhenAll(thesisEmbeddingTask, keywordsTask);
+
+        List<float>? liveThesisVector = thesisEmbeddingTask.Result;
+        string keywords = keywordsTask.Result;
+
+        // 2. Webscrape keywords on Google Scholar (still synchronous due to Selenium)
+        List<string> articleLinks = await Task.Run(() => ScrapeGoogleScholar(keywords));
+
+        // 3. Process articles concurrently
+        var client = _httpClientFactory.CreateClient();
+        client.DefaultRequestHeaders.Add("User-Agent", 
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36");
+
+        // Use SemaphoreSlim to limit concurrent requests (avoid overwhelming servers)
+        var semaphore = new SemaphoreSlim(5); // Max 5 concurrent requests
+        var articleTasks = articleLinks.Select(link => ProcessArticleAsync(
+            link, client, liveThesisVector, semaphore));
+
+        var processedArticles = await Task.WhenAll(articleTasks);
+
+        // Filter out nulls and take top 5 by relevance
+        var articles = processedArticles
+            .Where(a => a != null)
+            .OrderByDescending(a => a.Relevance)
+            .Take(5)
+            .ToList();
+
+        Console.WriteLine($"Returning {articles.Count} articles");
+        return Ok(articles);
+    }
+
+    private async Task<string> GetKeywordsAsync(string thesis)
+    {
         string geminiApiKey = _configuration["ApiKeys:Gemini"];
-
-        // 2. Ask Gemini for key words
         var model = new GenerativeModel(
             apiKey: geminiApiKey,
             model: "models/gemini-2.5-flash"
         );
+        
         string prompt = "return nothing but the 2 best keywords/keyphrases for finding supporting resources on google scholar for this thesis in the format keyword1, keyword2 : " + thesis;
         var response = await model.GenerateContentAsync(prompt);
+        return response.Text;
+    }
 
-        // 3. Webscrape keywords on Google Scholar (This part still uses Selenium)
+    private List<string> ScrapeGoogleScholar(string keywords)
+    {
         IWebDriver driver = new ChromeDriver();
-        driver.Navigate().GoToUrl("https://scholar.google.com/scholar?q=" + response.Text);
-        List<IWebElement> articleResults = driver.FindElements(By.ClassName("gs_r")).Take(15).ToList();
-        List<string> articleLinks = new List<string>();
-        foreach (var result in articleResults)
+        try
         {
-            try
+            driver.Navigate().GoToUrl("https://scholar.google.com/scholar?q=" + keywords);
+            List<IWebElement> articleResults = driver.FindElements(By.ClassName("gs_r")).Take(15).ToList();
+            List<string> articleLinks = new List<string>();
+            
+            foreach (var result in articleResults)
             {
-                // Find the link on each result
-                string link = result.FindElement(By.TagName("a")).GetAttribute("href");
-                if (!string.IsNullOrEmpty(link))
+                try
                 {
-                    articleLinks.Add(link);
+                    string link = result.FindElement(By.TagName("a")).GetAttribute("href");
+                    if (!string.IsNullOrEmpty(link))
+                    {
+                        articleLinks.Add(link);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to find link on one result: {ex.Message}");
                 }
             }
-            catch (Exception ex)
-            {
-                // Log if a result didn't have a link, etc.
-                Console.WriteLine($"Failed to find link on one result: {ex.Message}");
-            }
+            
+            return articleLinks;
+        }
+        finally
+        {
+            driver.Quit();
+        }
+    }
+
+    private async Task<ArticleDetails?> ProcessArticleAsync(
+        string link, 
+        HttpClient client, 
+        List<float>? liveThesisVector,
+        SemaphoreSlim semaphore)
+    {
+        if (link.Contains(".pdf", StringComparison.OrdinalIgnoreCase))
+        {
+            Console.WriteLine($"Skipping PDF link: {link}");
+            return null;
         }
 
-        driver.Quit();
-
-        List<ArticleDetails> articles = new List<ArticleDetails>();
-
-        
-
-        // Create ONE HttpClient for this whole request
-        var client = _httpClientFactory.CreateClient();
-        // Set a realistic User-Agent to avoid being blocked
-        client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36");
-
-        foreach (string link in articleLinks)
+        await semaphore.WaitAsync();
+        try
         {
-            if (link.Contains(".pdf", StringComparison.OrdinalIgnoreCase))
-            {
-                Console.WriteLine($"Skipping PDF link: {link}");
-                continue; // Skip to the next article
-            }
-
+            // Fetch HTML
             string rawHtml;
             try
             {
@@ -94,10 +138,10 @@ public class ThesisAPIController : ControllerBase
             catch (HttpRequestException ex)
             {
                 Console.WriteLine($"Failed to get {link}: {ex.Message}");
-                continue; // Skip this article
+                return null;
             }
 
-            // 4. Parse with AngleSharp
+            // Parse with AngleSharp
             var parser = new HtmlParser();
             var document = parser.ParseDocument(rawHtml);
             var mainContentElement =
@@ -105,38 +149,40 @@ public class ThesisAPIController : ControllerBase
                 document.QuerySelector("main") ??
                 document.QuerySelector("[role='main']");
 
-            string contentToSendToAI = mainContentElement?.TextContent ?? document.Body?.TextContent ?? "";
+            string contentToSendToAI = mainContentElement?.TextContent ?? 
+                document.Body?.TextContent ?? "";
 
-            // 5. Send to Nemotron (using our injected service)
-            try
+            // Extract article details
+            ArticleDetails article = await _extractor.ExtractArticleDetailsAsync(contentToSendToAI);
+            
+            if (article == null || string.IsNullOrEmpty(article.Abstract))
             {
-                ArticleDetails article = await _extractor.ExtractArticleDetailsAsync(contentToSendToAI);
-                if(article!=null){
-                    article.Link = link;
-                    if(!string.IsNullOrEmpty(article.Abstract)){
-                        var abstractVector = await _embeddingService.GetEmbeddingAsync(article.Abstract, "passage");
-                        if (abstractVector != null)
-                        {
-                            article.Relevance = CalculateRelevancePercentage(liveThesisVector, abstractVector);
-                        }
-                    }
-                    articles.Add(article);
-                    if (articles.Count >= 5) break;
-                }
+                return null;
             }
-            catch (Exception ex)
+
+            article.Link = link;
+
+            // Calculate relevance
+            var abstractVector = await _embeddingService.GetEmbeddingAsync(article.Abstract, "passage");
+            if (abstractVector != null && liveThesisVector != null)
             {
-                Console.WriteLine($"Failed to extract data from {link}: {ex.Message}");
-                continue; // Skip on extraction failure
+                article.Relevance = CalculateRelevancePercentage(liveThesisVector, abstractVector);
             }
+
+            return article;
         }
-
-        // 6. Return the object list. ASP.NET will serialize it.
-        Console.WriteLine($"Returning {articles.Count} articles");
-        return Ok(articles);
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to process {link}: {ex.Message}");
+            return null;
+        }
+        finally
+        {
+            semaphore.Release();
+        }
     }
 
-    private double CalculateRelevancePercentage(List<float> vectorA, List<float> vectorB)
+    private int CalculateRelevancePercentage(List<float> vectorA, List<float> vectorB)
     {
         if (vectorA.Count != vectorB.Count)
             throw new ArgumentException("Vectors must have the same dimension.");
@@ -154,7 +200,7 @@ public class ThesisAPIController : ControllerBase
 
         // Handle zero vectors
         if (magnitudeA == 0.0 || magnitudeB == 0.0)
-            return 0.0;
+            return 0;
 
         double cosine = dotProduct / (Math.Sqrt(magnitudeA) * Math.Sqrt(magnitudeB));
         
@@ -162,6 +208,6 @@ public class ThesisAPIController : ControllerBase
         // For retrieval, similarity is usually > 0, so this scaling is mostly for presentation.
         double percentage = ((cosine + 1) / 2) * 100; 
 
-        return Math.Round(percentage, 2);
+        return (int)Math.Round(percentage);
     }
 }
