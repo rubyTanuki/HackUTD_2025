@@ -15,7 +15,34 @@
       padding: 0 40px 40px 40px;
       overflow-x: hidden;
     }
+    
+
+    
+    
   </style>
+
+  <!-- welcome image Section -->
+<section class="welcome-image mt-6"></section>
+
+<style>
+  .welcome-image {
+    width: 100%;
+    max-height: 220px; /* keeps it small and visible */
+    background-image: url('/images/IMG_0223.PNG');
+    background-size: contain; /* ensures the full image is visible */
+    background-repeat: no-repeat;
+    background-position: center;
+    margin: 0 auto;
+  }
+
+  @media (max-width: 768px) {
+    .welcome-image {
+      max-height: 160px; /* smaller for mobile */
+      background-size: contain;
+    }
+  }
+</style>
+ 
 </head>
 <body class="text-white dark:bg-gray-900">
 
@@ -45,9 +72,15 @@
   </div>
 </nav>
 
-<div class="mt-10"></div>
+  <!--  welcome imaege -->
+<section class="w-full mt-6 flex justify-center">
+  <img src="/images/IMG_0223.PNG" 
+       alt="Scholar Scraper Banner" 
+       class="max-h-56 w-auto object-contain">
+</section>
 
-<!-- 🌍 Mission Section -->
+
+<!--  Mission Section -->
 <section class="max-w-4xl mx-auto text-center mb-16">
   <h2 class="text-4xl font-bold text-blue-400 mb-4">Our Mission</h2>
   <p class="text-lg text-gray-200 leading-relaxed bg-gray-800 border border-gray-700 rounded-xl shadow-md p-8">
