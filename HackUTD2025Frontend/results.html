@@ -12,7 +12,7 @@
   <style>
     body {
       background: #0f172a;
-      padding: 40px;
+      padding: 0 40px 40px 40px;
       overflow-x: hidden;
     }
 
@@ -52,6 +52,45 @@
   </style>
 </head>
 <body class="text-white dark:bg-gray-900">
+</head>
+<body class="text-white dark:bg-gray-900">
+<!-- Navbar -->
+<nav class="bg-gray-900 border-b border-gray-700 shadow-md sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto px-4 py-1 flex items-center justify-between">
+    
+    <!-- Left: Logo + Links -->
+    <div class="flex items-center space-x-6">
+      <!-- Logo -->
+      <img 
+        src="/images/IMG_0222.PNG" 
+        alt="Logo" 
+        class="w-12 h-12 object-cover"
+      >
+     <!-- Title -->
+    <span class="text-xl font-semibold text-white tracking-wide">
+   Scholar Scraper
+   </span>
+
+      <!-- Links -->
+      <div class="flex items-center space-x-8">
+        <a href="upload.html" id="nav-home"
+           class="text-gray-300 font-medium transition border-b-2 border-transparent pb-1 hover:text-blue-400 hover:border-blue-400">
+           Home
+        </a>
+        <a href="about.html" id="nav-about"
+           class="text-gray-300 font-medium transition border-b-2 border-transparent pb-1 hover:text-blue-400 hover:border-blue-400">
+           About Us
+        </a>
+      </div>
+    </div>
+
+   
+  </div>
+</nav>
+<div class="mt-6"></div>
+
+
+
 
   <div class="relative max-w-7xl mx-auto min-h-[500px] z-10">
     <!-- Thesis panel -->
@@ -108,60 +147,79 @@
 
     //  Render articles
     if (articles.length > 0) {
-      articlesDiv.innerHTML = ""; // clear
-      articles.forEach(article => {
-        const card = document.createElement("div");
-        card.className =
-          "bg-gray-900 border border-gray-700 rounded-lg p-5 mb-5 shadow-md hover:shadow-lg transition";
+  // Sort by relevance (highest first)
+  articles.sort((a, b) => (b.relevance || 0) - (a.relevance || 0));
 
-        const title = article.title || "Untitled Article";
-        const authors = Array.isArray(article.authors)
-          ? article.authors.join(", ")
-          : article.authors || "Unknown Authors";
-        const abstract = article.abstract || article.description || "No abstract available.";
-        const publisher = article.publisher || "Unknown Publisher";
-        const year = article.release_year || article.year || "N/A";
-        const relevance = article.relevance ? `${article.relevance}%` : "";
-        const link = article.link || article.url || "#";
+  articles.forEach((article, i) => {
+    const card = document.createElement("div");
+    card.className =
+      "bg-gray-900 border border-gray-700 rounded-lg p-5 mb-5 shadow-md hover:shadow-lg transition";
 
-        
+    const title = article.title || `Article ${i + 1}`;
+    const authors = Array.isArray(article.authors)
+      ? article.authors.join(", ")
+      : article.authors || "Unknown Author";
+    const abstract = article.abstract || article.description || "No abstract available.";
+    const publisher = article.publisher || "Unknown Publisher";
+    const year = article.release_year || article.year || "N/A";
+    const relevanceValue = parseFloat(article.relevance) || 0;
+    const link = article.link || article.url || "#";
 
-        card.innerHTML = `
-          <div class="flex justify-between items-start">
-            <div>
-              <h3 class="text-xl font-semibold text-white mb-1">
-                <a href="${article.link || '#'}" target="_blank" class="hover:text-blue-400">${title}</a>
-              </h3>
-              <p class="text-gray-400 text-sm">${authors}</p>
-            </div>
-            <div class="flex flex-col items-end">
-              ${relevance ? `<span class="bg-blue-600 text-white text-sm font-medium px-2 py-1 rounded">${relevance}</span>` : ""}
-              <button class="mt-2 text-gray-400 hover:text-blue-400 transition">
-                <i class="bi bi-chevron-down rotate text-lg"></i>
-              </button>
-            </div>
-          </div>
-          <p class="text-gray-300 mt-2 text-sm abstract line-clamp-2">${abstract}</p>
-          <div class="expandable mt-3 text-sm text-gray-300">
-            <p><strong>Publisher:</strong> ${publisher}</p>
-            <p><strong>Release Year:</strong> ${year}</p>
-          </div>
-        `;
+    // 🎨 Color logic for relevance
+    let relevanceColor = "bg-gray-600";
+    if (relevanceValue >= 80) relevanceColor = "bg-green-600";
+    else if (relevanceValue >= 70) relevanceColor = "bg-lime-500";  
+    else if (relevanceValue >= 65) relevanceColor = "bg-yellow-500";
+    else if (relevanceValue >= 55) relevanceColor = "bg-orange-500";
+    else relevanceColor = "bg-red-600";
 
-        const button = card.querySelector("button");
-        const expandable = card.querySelector(".expandable");
-        const abstractEl = card.querySelector(".abstract");
-        const icon = card.querySelector(".rotate");
-        button.addEventListener("click", () => {
-          expandable.classList.toggle("open");
-          abstractEl.classList.toggle("open");
-          icon.classList.toggle("open");
-        });
+    card.innerHTML = `
+  <div class="flex justify-between items-start">
+    <div class="flex-1">
+      <h3 class="text-lg font-semibold text-white mb-1 flex items-center">
+        <a href="${article.link}" target="_blank" 
+           class="hover:text-blue-400 flex items-center group">
+          ${article.title}
+          <i class="bi bi-box-arrow-up-right text-gray-400 ml-2 text-sm opacity-70 group-hover:text-blue-400 group-hover:opacity-100 transition"></i>
+        </a>
+      </h3>
+      <p class="text-gray-400 text-sm">${article.authors?.join(", ") || "Unknown Author"}</p>
+    </div>
+    <div class="flex flex-col items-end">
+      <span class="px-2 py-1 text-sm font-medium text-white rounded ${relevanceColor}">
+        ${article.relevance}%
+      </span>
+      <button class="mt-2 text-gray-400 hover:text-blue-400 transition">
+        <i class="bi bi-chevron-down text-lg"></i>
+      </button>
+    </div>
+  </div>
 
-        articlesDiv.appendChild(card);
-      });
-    } else {
-  // 🔥 Instead of "No articles found", print the backend JSON verbatim
+  <p class="text-gray-300 mt-2 text-sm abstract line-clamp-2">${article.abstract}</p>
+
+  <div class="expandable mt-3 text-sm text-gray-300">
+    <p><strong>Release year:</strong> ${article.release_year || "N/A"}</p>
+    <p><strong>Publisher:</strong> ${article.publisher || "N/A"}</p>
+  </div>
+`;
+
+
+    // expand/collapse
+    const button = card.querySelector("button");
+    const expandable = card.querySelector(".expandable");
+    const abstractEl = card.querySelector(".abstract");
+    const icon = card.querySelector(".rotate");
+
+    button.addEventListener("click", () => {
+      expandable.classList.toggle("open");
+      abstractEl.classList.toggle("open");
+      icon.classList.toggle("open");
+    });
+
+    articlesDiv.appendChild(card);
+  });
+} else {
+  //  Instead of "No articles found", print the backend JSON verbatim
   articlesDiv.innerHTML = `
     <h3 class="text-blue-400 text-xl mb-3 text-center">Raw JSON Response</h3>
     <pre class="bg-gray-900 text-gray-300 p-4 rounded-lg overflow-x-auto text-sm whitespace-pre-wrap">
