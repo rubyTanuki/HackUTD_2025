@@ -29,7 +29,7 @@ public class NvidiaDataExtractor
         // 1. Define our prompts
         string systemPrompt = @"You are a data extraction bot.
 Analyze the user-provided text from a scholarly article.
-Extract the title, authors, abstract, release date, and publisher.
+Extract the title, authors, abstract, release date, and publisher. Add spaces in between words to titles that are missing them.
 Respond ONLY with a valid JSON object matching this schema. do NOT ever put your thoughs before the text.:
 {
   ""title"": ""The Article Title"",
