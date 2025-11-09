@@ -17,6 +17,35 @@
   </style>
 </head>
 <body class="text-white dark:bg-gray-900">
+  <!-- 🔹 Sticky Navbar -->
+<nav class="bg-gray-900 border-b border-gray-700 shadow-md sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+    
+    <!-- 🖼️ Left side: Logo + Links -->
+    <div class="flex items-center space-x-10">
+      <!-- Logo (no circle or border, just image) -->
+      <img 
+        src="/images/IMG_0222.PNG" 
+        alt="Logo" 
+        class="w-16 h-16 object-cover"
+      >
+
+      <!-- Links -->
+      <div class="flex items-center space-x-8">
+        <a href="upload.html"
+           class="text-blue-400 font-medium transition border-b-2 border-blue-400 pb-1 hover:text-blue-300">
+           Home
+        </a>
+        <a href="about.html"
+           class="text-gray-300 font-medium transition border-b-2 border-transparent hover:text-blue-400 hover:border-blue-400 pb-1">
+           About Us
+        </a>
+      </div>
+    </div>
+
+  </div>
+</nav>
+
 
   <div class="max-w-3xl mx-auto">
     <h2 class="text-3xl font-semibold mb-8 text-center">Upload or Paste Your Thesis</h2>
@@ -48,28 +77,33 @@
           Upload
         </button>
       </div>
+      <div id="loadingContainer" class="hidden mt-8">
+        <div class="w-full bg-gray-700 rounded-full h-1.5 overflow-hidden">
+          <div id="loadingBar" class="h-1.5 bg-blue-500 rounded-full w-0 transition-all duration-500"></div>
+        </div>
+        <p id="loadingText" class="text-center text-gray-400 mt-2 text-sm">Starting upload...</p>
+      </div>
     </form>
 
     <pre id="output" class="mt-8 p-4 bg-gray-900 text-gray-300 rounded overflow-x-auto text-sm whitespace-pre-wrap"></pre>
   </div>
 
   <script>
-    //  Read uploaded text file
-    document.getElementById("fileInput").addEventListener("change", async () => {
+    // 📎 File input preview
+    document.getElementById("fileInput").addEventListener("change", () => {
       const file = document.getElementById("fileInput").files[0];
-      const status = document.getElementById("fileStatus");
-      const textarea = document.getElementById("dataInput");
-
+      const fileStatus = document.getElementById("fileStatus");
+  
       if (file) {
-        status.textContent = `File attached: ${file.name}`;
-        status.classList.add("text-green-400");
-        textarea.value = await file.text();
+        const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        fileStatus.textContent = `File attached: ${file.name} (${sizeMB} MB)`;
+        fileStatus.classList.add("text-green-400");
       } else {
-        status.textContent = "No file selected.";
-        status.classList.remove("text-green-400");
+        fileStatus.textContent = "No file selected.";
+        fileStatus.classList.remove("text-green-400");
       }
     });
-
+  
     // Call Backend API
     async function callAPI(thesis) {
       try {
@@ -92,27 +126,73 @@
         return null;
       }
     }
-
-    // Upload thesis
+  
+    // 🚀 Upload Function
     async function uploadData() {
-      const textData = document.getElementById("dataInput").value.trim();
+      const textarea = document.getElementById("dataInput");
+      const textData = textarea.value.trim();
       const output = document.getElementById("output");
-      if (!textData) return alert("Please paste or type your thesis before uploading!");
-
-      output.textContent = "Uploading...";
-
-      const backendResponse = await callAPI(textData);
-      if (!backendResponse) {
-        output.textContent = "Connection failed.";
+      const loadingContainer = document.getElementById("loadingContainer");
+      const loadingBar = document.getElementById("loadingBar");
+      const loadingText = document.getElementById("loadingText");
+  
+      if (!textData) {
+        alert("Please enter your thesis before uploading!");
         return;
       }
-
-      localStorage.setItem("uploadedThesis", textData);
-      localStorage.setItem("backendResponse", JSON.stringify(backendResponse));
-
-      output.textContent = "Success! Redirecting...";
-      setTimeout(() => window.location.href = "results.html", 1000);
+  
+      // 🟦 Show progress bar
+      loadingBar.style.width = "0%";
+      loadingBar.className = "h-1.5 bg-red-600 rounded-full transition-all duration-500";
+      loadingContainer.classList.remove("hidden");
+      loadingText.textContent = "Uploading your thesis...";
+  
+      let progress = 0;
+      const timer = setInterval(() => {
+        // ⏳ Slow + smooth increase
+        progress += Math.random() * 3; // 1–3% each step
+        if (progress > 90) progress = 90; // stop at 90% until backend done
+        loadingBar.style.width = `${progress}%`;
+  
+        // 🎨 Color gradient
+        if (progress < 30) loadingBar.className = "h-1.5 bg-red-600 rounded-full transition-all duration-500";
+        else if (progress < 60) loadingBar.className = "h-1.5 bg-yellow-500 rounded-full transition-all duration-500";
+        else if (progress < 85) loadingBar.className = "h-1.5 bg-lime-500 rounded-full transition-all duration-500";
+        else loadingBar.className = "h-1.5 bg-green-600 rounded-full transition-all duration-500";
+      }, 500);
+  
+      try {
+        const start = performance.now();
+        const backendResponse = await callAPI(textData);
+        const end = performance.now();
+        const duration = ((end - start) / 1000).toFixed(1);
+  
+        if (!backendResponse) {
+          clearInterval(timer);
+          loadingText.textContent = "❌ Connection failed.";
+          return;
+        }
+  
+        // ✅ Backend done → complete bar
+        clearInterval(timer);
+        loadingBar.style.width = "100%";
+        loadingBar.className = "h-1.5 bg-blue-600 rounded-full transition-all duration-700";
+        loadingText.textContent = `✅ Upload complete (${duration}s)! Redirecting...`;
+  
+        // Save to localStorage + redirect
+        localStorage.setItem("uploadedThesis", textData);
+        localStorage.setItem("backendResponse", JSON.stringify(backendResponse));
+  
+        setTimeout(() => window.location.href = "results.html", 1000);
+  
+      } catch (error) {
+        clearInterval(timer);
+        loadingText.textContent = "❌ Error connecting to backend.";
+        output.textContent = `Error: ${error}`;
+        console.error(error);
+      }
     }
   </script>
+  
 </body>
 </html>
