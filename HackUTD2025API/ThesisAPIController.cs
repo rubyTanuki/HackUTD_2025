@@ -11,16 +11,19 @@ public class ThesisAPIController : ControllerBase
     private readonly IConfiguration _configuration;
     private readonly NvidiaDataExtractor _extractor;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly NeMoEmbeddingService _embeddingService;
 
     // Services are "injected" into the constructor
     public ThesisAPIController(
         IConfiguration configuration, 
         NvidiaDataExtractor extractor,
-        IHttpClientFactory httpClientFactory)
+        IHttpClientFactory httpClientFactory,
+        NeMoEmbeddingService embeddingService)
     {
         _configuration = configuration;
         _extractor = extractor;
         _httpClientFactory = httpClientFactory;
+        _embeddingService = embeddingService;
     }
 
     [HttpPost("getArticles")]
@@ -28,6 +31,9 @@ public class ThesisAPIController : ControllerBase
     {
         // 1. Get thesis
         string thesis = json["thesis"].ToString();
+
+        List<float>? liveThesisVector = await _embeddingService.GetEmbeddingAsync(thesis, "query");
+
         string geminiApiKey = _configuration["ApiKeys:Gemini"];
 
         // 2. Ask Gemini for key words
@@ -41,7 +47,7 @@ public class ThesisAPIController : ControllerBase
         // 3. Webscrape keywords on Google Scholar (This part still uses Selenium)
         IWebDriver driver = new ChromeDriver();
         driver.Navigate().GoToUrl("https://scholar.google.com/scholar?q=" + response.Text);
-        List<IWebElement> articleResults = driver.FindElements(By.ClassName("gs_r")).Take(10).ToList();
+        List<IWebElement> articleResults = driver.FindElements(By.ClassName("gs_r")).Take(15).ToList();
         List<string> articleLinks = new List<string>();
         foreach (var result in articleResults)
         {
@@ -64,6 +70,8 @@ public class ThesisAPIController : ControllerBase
         driver.Quit();
 
         List<ArticleDetails> articles = new List<ArticleDetails>();
+
+        
 
         // Create ONE HttpClient for this whole request
         var client = _httpClientFactory.CreateClient();
@@ -103,9 +111,18 @@ public class ThesisAPIController : ControllerBase
             try
             {
                 ArticleDetails article = await _extractor.ExtractArticleDetailsAsync(contentToSendToAI);
-                article.Link = link;
-                articles.Add(article);
-                if (articles.Count >= 5) break;
+                if(article!=null){
+                    article.Link = link;
+                    if(!string.IsNullOrEmpty(article.Abstract)){
+                        var abstractVector = await _embeddingService.GetEmbeddingAsync(article.Abstract, "passage");
+                        if (abstractVector != null)
+                        {
+                            article.Relevance = CalculateRelevancePercentage(liveThesisVector, abstractVector);
+                        }
+                    }
+                    articles.Add(article);
+                    if (articles.Count >= 5) break;
+                }
             }
             catch (Exception ex)
             {
@@ -117,69 +134,6 @@ public class ThesisAPIController : ControllerBase
         // 6. Return the object list. ASP.NET will serialize it.
         Console.WriteLine($"Returning {articles.Count} articles");
         return Ok(articles);
-    }
-
-
-    [HttpPost("test")]
-    public async Task<IActionResult> testingM()
-    {
-        Console.WriteLine("--- NeMo Embedding & Relevance Test ---");
-        
-        // --- MOCK DATA FOR TESTING WITHOUT API KEY/CALLS ---
-        // In a real scenario, these would come from the NeMo API.
-        // These vectors are just placeholders to test the math.
-        List<float> thesisVectorMock = new List<float> { 0.1f, 0.5f, 0.2f, -0.1f, 0.9f };
-        
-        // Abstract 1: High Similarity (Vectors are closely aligned)
-        List<float> abstract1VectorMock = new List<float> { 0.11f, 0.49f, 0.19f, -0.12f, 0.91f }; 
-        
-        // Abstract 2: Low Similarity (Vectors are orthogonal/different)
-        List<float> abstract2VectorMock = new List<float> { -0.8f, 0.0f, 0.5f, 0.0f, -0.1f }; 
-        
-        string thesis = "The application of quantum entanglement to blockchain cryptography significantly enhances transaction security against post-quantum attacks.";
-        string abstract1Title = "Quantum-Resistant Blockchain Protocol";
-        string abstract2Title = "General Machine Learning Applications in Finance";
-
-        // --- SIMILARITY CALCULATION TESTS ---
-        Console.WriteLine($"\nThesis: {thesis}");
-        Console.WriteLine($"\nTesting Cosine Similarity Function (Vector Math)...");
-
-        double relevance1 = CalculateRelevancePercentage(thesisVectorMock, abstract1VectorMock);
-        Console.WriteLine($"Article: {abstract1Title}");
-        Console.WriteLine($"  -> Relevance Score: {relevance1}% (Expected High)");
-        
-        double relevance2 = CalculateRelevancePercentage(thesisVectorMock, abstract2VectorMock);
-        Console.WriteLine($"Article: {abstract2Title}");
-        Console.WriteLine($"  -> Relevance Score: {relevance2}% (Expected Low)");
-
-        // --- REAL API TEST (UNCOMMENT TO USE) ---
-        
-        Console.WriteLine("\n--- Testing LIVE NeMo API Call ---");
-        string apiKey = "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"; // *** REPLACE THIS WITH YOUR REAL KEY ***
-        
-        
-
-        var service = new NeMoEmbeddingService(apiKey);
-        
-        Console.WriteLine("Fetching thesis embedding...");
-        List<float>? liveThesisVector = await service.GetEmbeddingAsync(thesis);
-
-        if (liveThesisVector != null)
-        {
-            Console.WriteLine($"Thesis Vector fetched successfully (Dimension: {liveThesisVector.Count})");
-
-            // You would normally fetch the abstract text and embed it here
-            string testAbstract = "This paper details a novel decentralized ledger using quantum key distribution to secure transactions, providing a concrete defense against Shor's algorithm.";
-            List<float>? liveAbstractVector = await service.GetEmbeddingAsync(testAbstract);
-
-            if (liveAbstractVector != null)
-            {
-                double liveRelevance = CalculateRelevancePercentage(liveThesisVector, liveAbstractVector);
-                Console.WriteLine($"\nLive Article Abstract: {testAbstract.Substring(0, 50)}...");
-                Console.WriteLine($"  -> LIVE NeMo Relevance Score: {liveRelevance}%");
-            }
-        }
-        return Ok();
     }
 
     private double CalculateRelevancePercentage(List<float> vectorA, List<float> vectorB)
@@ -210,4 +164,4 @@ public class ThesisAPIController : ControllerBase
 
         return Math.Round(percentage, 2);
     }
-    }
+}
