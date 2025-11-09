@@ -15,24 +15,26 @@
       background: #0f172a;
       padding: 40px;
       overflow-x: hidden;
+      position: relative;
     }
 
-    /* 🔹 Animation for thesis lock-in */
-    @keyframes lockIn {
+    /* 🔹 Animations */
+    @keyframes thesisSlideLeft {
       0% {
-        transform: scale(1.05);
-        opacity: 0.3;
+        left: 50%;
+        transform: translateX(-50%) scale(1);
+        width: 48rem; /* match max-w-3xl */
       }
       100% {
-        transform: scale(1);
-        opacity: 1;
+        left: 0;
+        transform: translateX(0) scale(0.95);
+        width: 40%;
       }
     }
 
-    /* 🔹 Slide-in animation for results */
-    @keyframes slideInRight {
+    @keyframes resultsSlideIn {
       0% {
-        transform: translateX(100%);
+        transform: translateX(120%);
         opacity: 0;
       }
       100% {
@@ -41,25 +43,27 @@
       }
     }
 
-    .animate-lock {
-      animation: lockIn 0.8s ease-out forwards;
+    .animate-thesis-slide-left {
+      animation: thesisSlideLeft 1.3s cubic-bezier(0.77, 0, 0.175, 1) forwards;
     }
 
-    .animate-slide {
-      animation: slideInRight 1s ease-out forwards;
+    .animate-results-slide-in {
+      animation: resultsSlideIn 1.1s ease-out forwards;
     }
   </style>
 </head>
 <body class="dark:bg-gray-900 text-white">
 
-  <!-- 🔹 Container for animation -->
-  <div class="max-w-7xl mx-auto flex flex-col md:flex-row gap-10 items-start">
+  <!--  Animation container -->
+  <div class="relative max-w-7xl mx-auto min-h-[500px] z-10">
 
-    <!-- 🧠 Thesis Panel (lock-in animation) -->
-    <div id="thesis-box" class="flex-1 md:flex-none md:max-w-[45%] opacity-0 scale-105 transition-all duration-700 animate-lock">
+    <!-- Thesis Panel -->
+    <div id="thesis-box"
+      class="absolute top-0 left-1/2 -translate-x-1/2 opacity-100 w-full max-w-3xl">
       <h2 class="text-3xl font-semibold mb-4 text-blue-400 text-center">Your Thesis</h2>
 
-      <div class="w-full border border-gray-700 rounded-lg bg-gray-800 shadow-md">
+      <!-- exact same markup as upload page -->
+      <div class="w-full mb-6 border border-gray-700 rounded-lg bg-gray-800 shadow-md">
         <div class="flex items-center justify-between px-3 py-2 border-b border-gray-700 bg-gray-900 rounded-t-lg">
           <div class="flex items-center space-x-2 text-gray-400">
             <i class="bi bi-file-earmark-text text-lg"></i>
@@ -68,41 +72,36 @@
         </div>
 
         <div class="px-4 py-3 bg-gray-800 rounded-b-lg">
-          <textarea id="thesisText"
-            rows="10"
-            readonly
+          <textarea id="thesisText" rows="8" readonly
             class="block w-full px-0 text-base text-white bg-gray-800 border-0 focus:ring-0 placeholder-gray-400 resize-none"
             placeholder="No thesis found."></textarea>
         </div>
       </div>
     </div>
 
-    <!-- 🧩 Results Panel (slide-in animation) -->
-    <div id="results" class="flex-1 bg-gray-800 border border-gray-700 rounded-xl p-8 shadow-lg opacity-0 translate-x-full">
-      <h2 class="text-3xl font-semibold mb-6 text-blue-400 text-center">Recommended Articles</h2>
-      <div id="quote" class="italic text-gray-400 mb-6 border-l-4 border-blue-500 pl-4 text-lg"></div>
+    <!-- 🧩 Results Panel -->
+    <div id="results"
+      class="absolute top-0 right-0 w-[55%] bg-gray-800 border border-gray-700 rounded-xl p-6 shadow-lg opacity-0">
+      <h2 class="text-2xl font-semibold mb-4 text-blue-400 text-center">Recommended Articles</h2>
+      <div id="quote" class="italic text-gray-400 mb-5 border-l-4 border-blue-500 pl-4 text-base"></div>
       <div id="articles"></div>
     </div>
   </div>
 
-  <!-- 🔙 Back Button -->
-  <div class="text-center mt-10 opacity-0 transition-opacity duration-700 delay-1000" id="backButton">
+  <!-- 🔙 Back Button (always visible) -->
+  <div class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50">
     <button onclick="window.location.href='upload.html'"
-      class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg focus:ring-4 focus:ring-blue-400 transition">
+      class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-lg focus:ring-4 focus:ring-blue-400 transition">
       <i class="bi bi-arrow-left"></i> Back
     </button>
   </div>
 
   <script>
-    // 🧠 Retrieve stored data
+    //  Load data
     const thesis = localStorage.getItem("uploadedThesis");
     const responseData = JSON.parse(localStorage.getItem("backendResponse"));
+    document.getElementById("thesisText").value = thesis || "No thesis found.";
 
-    // Display thesis
-    const thesisBox = document.getElementById("thesisText");
-    thesisBox.value = thesis || "No thesis found.";
-
-    // Display quote and results
     const quoteDiv = document.getElementById("quote");
     const articlesDiv = document.getElementById("articles");
     quoteDiv.textContent = responseData?.quote || "";
@@ -111,36 +110,28 @@
       responseData.results.forEach(article => {
         const card = document.createElement("div");
         card.className =
-          "bg-gray-900 border border-gray-700 rounded-lg p-5 mb-6 shadow-md hover:shadow-lg hover:-translate-y-1 transition-transform";
-
+          "bg-gray-900 border border-gray-700 rounded-lg p-4 mb-4 shadow-md hover:shadow-lg hover:-translate-y-1 transition-transform";
         card.innerHTML = `
-          <h3 class="text-xl font-semibold text-white mb-2">
+          <h3 class="text-lg font-semibold text-white mb-1">
             <a href="${article.link}" target="_blank" class="hover:text-blue-400">${article.title}</a>
           </h3>
-          <p class="text-gray-300 mb-2">${article.description}</p>
-          <p class="text-sm text-blue-400 mb-1">Keywords: ${article.keywords.join(", ")}</p>
-          <p class="italic text-gray-400 text-sm">Why chosen: ${article.why_chosen}</p>
-        `;
+          <p class="text-gray-300 mb-1 text-sm">${article.description}</p>
+          <p class="text-xs text-blue-400 mb-1">Keywords: ${article.keywords.join(", ")}</p>
+          <p class="italic text-gray-400 text-xs">Why chosen: ${article.why_chosen}</p>`;
         articlesDiv.appendChild(card);
       });
-    } else {
-      articlesDiv.innerHTML = "<p class='text-gray-400'>No results found.</p>";
     }
 
-    // ✨ Trigger slide-in animation sequence
+    //  Animation sequence
     window.addEventListener("load", () => {
-      // Lock-in animation for thesis (already animates on load)
-      const results = document.getElementById("results");
-      const backButton = document.getElementById("backButton");
+      const thesisBox = document.getElementById("thesis-box");
+      const resultsPanel = document.getElementById("results");
 
-      setTimeout(() => {
-        results.classList.remove("translate-x-full", "opacity-0");
-        results.classList.add("animate-slide");
-      }, 800); // after thesis locks in
+      // 1️ Slide thesis left
+      setTimeout(() => thesisBox.classList.add("animate-thesis-slide-left"), 600);
 
-      setTimeout(() => {
-        backButton.classList.remove("opacity-0");
-      }, 1800);
+      // 2️ Slide in results
+      setTimeout(() => resultsPanel.classList.add("animate-results-slide-in"), 800);
     });
   </script>
 </body>

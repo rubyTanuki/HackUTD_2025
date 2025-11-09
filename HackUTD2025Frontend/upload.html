@@ -66,7 +66,7 @@
   </div>
 
   <script>
-    // 📎 Update file status when file selected via paperclip
+    //  Update file status when file selected via paperclip
     document.getElementById("fileInput").addEventListener("change", () => {
       const file = document.getElementById("fileInput").files[0];
       const fileStatus = document.getElementById("fileStatus");
@@ -81,7 +81,7 @@
       }
     });
 
-    // 🚀 Upload Function (Mock Backend)
+    //  Upload Function (Mock Backend)
     async function uploadData() {
       const textarea = document.getElementById("dataInput");
       const textData = textarea.value.trim();
@@ -94,7 +94,7 @@
 
       output.textContent = "Uploading...";
 
-      // 🔧 Mock Backend Response
+      //  Mock Backend Response
       const mockResponse = {
         response_code: "200",
         quote: "“Artificial Intelligence is not a threat, but a tool — its impact depends on the hands that use it.”",
@@ -123,11 +123,11 @@
         ]
       };
 
-      // 💾 Store data in localStorage
+      // Store data in localStorage
       localStorage.setItem("uploadedThesis", textData);
       localStorage.setItem("backendResponse", JSON.stringify(mockResponse));
 
-      // ⏩ Redirect to results
+      // Redirect to results
       window.location.href = "results.html";
     }
     
