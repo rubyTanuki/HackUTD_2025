@@ -20,39 +20,35 @@
 <body class="dark:bg-gray-900 text-white">
 
   <div class="max-w-3xl mx-auto">
-    <h2 class="text-3xl font-semibold text-white mb-8 text-center">Upload or Type Your Thesis</h2>
+    <h2 class="text-3xl font-semibold text-white mb-8 text-center">Upload or Paste Your Thesis</h2>
 
-    <!-- Text Editor Card -->
+    <!-- Text Editor -->
     <form onsubmit="event.preventDefault(); uploadData();">
       <div class="w-full mb-6 border border-gray-700 rounded-lg bg-gray-800 shadow-md">
         <div class="flex items-center justify-between px-3 py-2 border-b border-gray-700 bg-gray-900 rounded-t-lg">
           <div class="flex items-center space-x-2">
-            <!-- 📎 Paperclip for file upload -->
+            <!-- 📎 File upload -->
             <label for="fileInput" class="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-sm cursor-pointer">
               <i class="bi bi-paperclip text-lg"></i>
               <span class="sr-only">Attach File</span>
-              <input id="fileInput" type="file" class="hidden" accept=".pdf" />
+              <input id="fileInput" type="file" class="hidden" accept=".txt" />
             </label>
           </div>
-
-          <button type="button"
-            class="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-sm">
-            <span class="text-xs">Full Screen</span>
-          </button>
+          <p class="text-xs text-gray-400">or just paste your thesis below</p>
         </div>
 
-        <!-- ✏️ Thesis Text Area -->
+        <!-- Textarea -->
         <div class="px-4 py-3 bg-gray-800 rounded-b-lg">
-          <textarea id="dataInput" rows="8"
+          <textarea id="dataInput" rows="10"
             class="block w-full px-0 text-base text-white bg-gray-800 border-0 focus:ring-0 placeholder-gray-400"
-            placeholder="Write your thesis here..." required></textarea>
+            placeholder="Paste or type your thesis here..." required></textarea>
         </div>
       </div>
 
-      <!-- File status below editor -->
+      <!-- File Status -->
       <p id="fileStatus" class="text-center text-gray-400 mb-6">No file selected.</p>
 
-      <!--  Upload Button -->
+      <!-- Upload Button -->
       <div class="text-center">
         <button type="submit"
           class="px-8 py-3 text-base font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg focus:ring-4 focus:ring-blue-400 transition">
@@ -61,76 +57,85 @@
       </div>
     </form>
 
-    <!--  Debug/Output -->
+    <!-- Debug Output -->
     <pre id="output" class="mt-8 p-4 bg-gray-900 text-gray-300 rounded-lg overflow-x-auto text-sm whitespace-pre-wrap"></pre>
   </div>
 
   <script>
-    //  Update file status when file selected via paperclip
-    document.getElementById("fileInput").addEventListener("change", () => {
+    // 📎 Handle file upload (optional)
+    document.getElementById("fileInput").addEventListener("change", async () => {
       const file = document.getElementById("fileInput").files[0];
       const fileStatus = document.getElementById("fileStatus");
+      const textarea = document.getElementById("dataInput");
 
       if (file) {
         const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
         fileStatus.textContent = `File attached: ${file.name} (${sizeMB} MB)`;
         fileStatus.classList.add("text-green-400");
+
+        // Read .txt file into textarea
+        const text = await file.text();
+        textarea.value = text;
       } else {
         fileStatus.textContent = "No file selected.";
         fileStatus.classList.remove("text-green-400");
       }
     });
 
-    //  Upload Function (Mock Backend)
+    // 🌐 Call your backend API
+    async function callAPI(thesis) {
+      try {
+        const response = await fetch("https://oncologic-unpopularly-shirley.ngrok-free.dev/getArticles", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ thesis: thesis }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Backend error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data;
+      } catch (error) {
+        console.error("❌ Error calling backend:", error);
+        alert("Could not connect to backend. Please check your connection or try again.");
+        return null;
+      }
+    }
+
+    // 🚀 Upload and send data
     async function uploadData() {
       const textarea = document.getElementById("dataInput");
-      const textData = textarea.value.trim();
       const output = document.getElementById("output");
+      const textData = textarea.value.trim();
 
       if (!textData) {
-        alert("Please enter your thesis before uploading!");
+        alert("Please paste or type your thesis before uploading!");
         return;
       }
 
-      output.textContent = "Uploading...";
+      output.textContent = "Uploading your thesis... please wait.";
 
-      //  Mock Backend Response
-      const mockResponse = {
-        response_code: "200",
-        quote: "“Artificial Intelligence is not a threat, but a tool — its impact depends on the hands that use it.”",
-        results: [
-          {
-            title: "AI and the Future of Learning",
-            description: "Examines how AI tools adapt to student learning styles.",
-            keywords: ["AI", "Education", "Adaptive Learning"],
-            why_chosen: "Matches your thesis focus on personalization.",
-            link: "#"
-          },
-          {
-            title: "Ethics in Machine Learning Systems",
-            description: "Explores fairness and ethical dilemmas in AI.",
-            keywords: ["Ethics", "Bias", "Machine Learning"],
-            why_chosen: "Relates to your concern about bias and responsibility.",
-            link: "#"
-          },
-          {
-            title: "The Role of Automation in Modern Classrooms",
-            description: "Studies how automation transforms teaching approaches.",
-            keywords: ["Automation", "Teaching", "Innovation"],
-            why_chosen: "Shows real-world applications of your thesis ideas.",
-            link: "#"
-          }
-        ]
-      };
+      // Call backend API
+      const backendResponse = await callAPI(textData);
 
-      // Store data in localStorage
+      if (!backendResponse) {
+        output.textContent = "Upload failed. Please try again.";
+        return;
+      }
+
+      // Save thesis + backend data to localStorage
       localStorage.setItem("uploadedThesis", textData);
-      localStorage.setItem("backendResponse", JSON.stringify(mockResponse));
+      localStorage.setItem("backendResponse", JSON.stringify(backendResponse));
 
-      // Redirect to results
-      window.location.href = "results.html";
+      output.textContent = "Upload successful! Redirecting to results...";
+      setTimeout(() => {
+        window.location.href = "results.html";
+      }, 1000);
     }
-    
   </script>
 </body>
 </html>

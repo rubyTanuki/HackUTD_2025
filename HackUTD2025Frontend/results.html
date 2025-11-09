@@ -23,7 +23,7 @@
       0% {
         left: 50%;
         transform: translateX(-50%) scale(1);
-        width: 48rem; /* match max-w-3xl */
+        width: 48rem;
       }
       100% {
         left: 0;
@@ -50,14 +50,58 @@
     .animate-results-slide-in {
       animation: resultsSlideIn 1.1s ease-out forwards;
     }
+
+    /* 🔹 Expandable sections */
+    .expandable {
+      transition: max-height 0.4s ease, opacity 0.4s ease;
+      overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+    }
+    .expandable.open {
+      max-height: 300px;
+      opacity: 1;
+    }
+    .rotate {
+      transition: transform 0.3s ease;
+    }
+    .rotate.open {
+      transform: rotate(180deg);
+    }
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .line-clamp-2.open {
+      -webkit-line-clamp: unset;
+      overflow: visible;
+    }
+
+    /* 🌀 Fade-in animation for each card */
+    @keyframes fadeUp {
+      0% {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .fade-up {
+      opacity: 0;
+      animation: fadeUp 0.8s ease forwards;
+    }
   </style>
 </head>
 <body class="dark:bg-gray-900 text-white">
 
-  <!--  Animation container -->
+  <!-- 🔹 Animation Container -->
   <div class="relative max-w-7xl mx-auto min-h-[500px] z-10">
 
-    <!-- Thesis Panel -->
+    <!-- 🧠 Thesis Panel -->
     <div id="thesis-box"
       class="absolute top-0 left-1/2 -translate-x-1/2 opacity-100 w-full max-w-3xl">
       <h2 class="text-3xl font-semibold mb-4 text-blue-400 text-center">Your Thesis</h2>
@@ -97,40 +141,103 @@
   </div>
 
   <script>
-    //  Load data
-    const thesis = localStorage.getItem("uploadedThesis");
-    const responseData = JSON.parse(localStorage.getItem("backendResponse"));
-    document.getElementById("thesisText").value = thesis || "No thesis found.";
+    // 🧠 Mock data for demonstration
+    const thesis = localStorage.getItem("uploadedThesis") || 
+      "Artificial intelligence systems can enhance adaptive learning through personalized algorithms and real-time feedback.";
+    document.getElementById("thesisText").value = thesis;
 
+    const responseData = {
+      quote: "“Artificial Intelligence is not a threat, but a tool — its impact depends on the hands that use it.”",
+      results: [
+        {
+          title: "AI and the Future of Learning",
+          link: "#",
+          abstract: "Examines how AI tools adapt to student learning styles and the importance of personalized systems that evolve over time.",
+          authors: ["Jane Doe", "John Smith"],
+          release_year: "2025",
+          relevance: 95,
+          publisher: "IEEE"
+        },
+        {
+          title: "Ethics in Machine Learning Systems",
+          link: "#",
+          abstract: "Explores fairness, transparency, and accountability within machine learning ethics and the importance of equitable model evaluation.",
+          authors: ["Sarah Chen", "David Lee"],
+          release_year: "2024",
+          relevance: 92,
+          publisher: "ACM Press"
+        },
+        {
+          title: "The Role of Automation in Modern Classrooms",
+          link: "#",
+          abstract: "Studies how automation transforms teaching approaches, enhances productivity, and redefines the student-teacher dynamic in the classroom.",
+          authors: ["Alex Brown", "Maria Rivera"],
+          release_year: "2025",
+          relevance: 90,
+          publisher: "Springer"
+        }
+      ]
+    };
+
+    // Display quote
     const quoteDiv = document.getElementById("quote");
+    quoteDiv.textContent = responseData.quote;
+
+    // 🧩 Render article cards
     const articlesDiv = document.getElementById("articles");
-    quoteDiv.textContent = responseData?.quote || "";
+    responseData.results.forEach((article, index) => {
+      const card = document.createElement("div");
+      card.className = "bg-gray-900 border border-gray-700 rounded-lg p-5 mb-5 shadow-md hover:shadow-lg transition fade-up";
+      card.style.animationDelay = `${0.4 + index * 0.2}s`;
 
-    if (responseData && responseData.results) {
-      responseData.results.forEach(article => {
-        const card = document.createElement("div");
-        card.className =
-          "bg-gray-900 border border-gray-700 rounded-lg p-4 mb-4 shadow-md hover:shadow-lg hover:-translate-y-1 transition-transform";
-        card.innerHTML = `
-          <h3 class="text-lg font-semibold text-white mb-1">
-            <a href="${article.link}" target="_blank" class="hover:text-blue-400">${article.title}</a>
-          </h3>
-          <p class="text-gray-300 mb-1 text-sm">${article.description}</p>
-          <p class="text-xs text-blue-400 mb-1">Keywords: ${article.keywords.join(", ")}</p>
-          <p class="italic text-gray-400 text-xs">Why chosen: ${article.why_chosen}</p>`;
-        articlesDiv.appendChild(card);
+      card.innerHTML = `
+        <div class="flex justify-between items-start">
+          <div>
+            <h3 class="text-xl font-semibold text-white mb-1">
+              <a href="${article.link}" target="_blank" class="hover:text-blue-400">${article.title}</a>
+            </h3>
+            <p class="text-gray-400 text-sm">${article.authors.join(", ")}</p>
+          </div>
+          <div class="flex flex-col items-end">
+            <span class="bg-blue-600 text-white text-sm font-medium px-2 py-1 rounded">${article.relevance}%</span>
+            <button class="mt-2 text-gray-400 hover:text-blue-400 transition">
+              <i class="bi bi-chevron-down rotate text-lg"></i>
+            </button>
+          </div>
+        </div>
+
+        <p class="text-gray-300 mt-2 text-sm abstract line-clamp-2">${article.abstract}</p>
+
+        <div class="expandable mt-3 text-sm text-gray-300">
+          <p><strong>Release year:</strong> ${article.release_year}</p>
+          <p><strong>Publisher:</strong> ${article.publisher}</p>
+        </div>
+      `;
+
+      articlesDiv.appendChild(card);
+
+      // Expand functionality
+      const button = card.querySelector("button");
+      const expandable = card.querySelector(".expandable");
+      const abstract = card.querySelector(".abstract");
+      const icon = card.querySelector(".rotate");
+
+      button.addEventListener("click", () => {
+        expandable.classList.toggle("open");
+        abstract.classList.toggle("open");
+        icon.classList.toggle("open");
       });
-    }
+    });
 
-    //  Animation sequence
+    // ✨ Animation sequence
     window.addEventListener("load", () => {
       const thesisBox = document.getElementById("thesis-box");
       const resultsPanel = document.getElementById("results");
 
-      // 1️ Slide thesis left
+      // 1️⃣ Slide thesis left
       setTimeout(() => thesisBox.classList.add("animate-thesis-slide-left"), 600);
 
-      // 2️ Slide in results
+      // 2️⃣ Slide in results
       setTimeout(() => resultsPanel.classList.add("animate-results-slide-in"), 800);
     });
   </script>
