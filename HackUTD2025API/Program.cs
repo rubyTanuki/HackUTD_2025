@@ -1,13 +1,20 @@
+using Microsoft.Extensions.DependencyInjection;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddControllers();
 
-builder.Services.AddHttpClient();
+builder.Services.AddHttpClient("Default")
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    {
+        MaxConnectionsPerServer = 20
+    });
 
 builder.Services.AddScoped<NvidiaDataExtractor>();
 builder.Services.AddScoped<NeMoEmbeddingService>();
+builder.Services.AddScoped<NvidiaVlmService>();
 
 builder.Services.AddCors(options =>
 {
