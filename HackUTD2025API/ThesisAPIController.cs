@@ -120,7 +120,7 @@ public class ThesisAPIController : ControllerBase
         List<float>? liveThesisVector,
         SemaphoreSlim semaphore)
     {
-        if (link.Contains(".pdf", StringComparison.OrdinalIgnoreCase))
+        if (link.Contains("/download", StringComparison.OrdinalIgnoreCase))
         {
             Console.WriteLine($"Skipping PDF link: {link}");
             return null;
@@ -179,6 +179,9 @@ public class ThesisAPIController : ControllerBase
         finally
         {
             semaphore.Release();
+
+
+            
         }
     }
 

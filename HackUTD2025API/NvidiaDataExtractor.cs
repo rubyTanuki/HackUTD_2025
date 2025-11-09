@@ -47,7 +47,7 @@ Here is the article text:
         // 2. Build the request object
         var requestPayload = new NvidiaApiRequest
         {
-            Model = "nvidia/nemotron-nano-9b-v2:free",
+            Model = "nvidia/nemotron-nano-9b-v2",
             Messages = new List<ApiMessage>
             {
                 new ApiMessage { Role = "system", Content = systemPrompt },

@@ -75,5 +75,5 @@ public class ArticleDetails
     public string Link { get; set; }
 
     [JsonPropertyName("relevance")]
-    public double? Relevance { get; set; }
+    public int? Relevance { get; set; }
 }
