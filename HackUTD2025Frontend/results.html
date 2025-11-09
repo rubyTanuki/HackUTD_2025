@@ -14,19 +14,51 @@
     body {
       background: #0f172a;
       padding: 40px;
+      overflow-x: hidden;
+    }
+
+    /* 🔹 Animation for thesis lock-in */
+    @keyframes lockIn {
+      0% {
+        transform: scale(1.05);
+        opacity: 0.3;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    /* 🔹 Slide-in animation for results */
+    @keyframes slideInRight {
+      0% {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      100% {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .animate-lock {
+      animation: lockIn 0.8s ease-out forwards;
+    }
+
+    .animate-slide {
+      animation: slideInRight 1s ease-out forwards;
     }
   </style>
 </head>
 <body class="dark:bg-gray-900 text-white">
 
-  <!-- 🔹 Side-by-side layout -->
+  <!-- 🔹 Container for animation -->
   <div class="max-w-7xl mx-auto flex flex-col md:flex-row gap-10 items-start">
 
-    <!-- 🧠 Thesis Panel (same style as upload textarea) -->
-    <div id="thesis-box" class="flex-1 md:flex-none md:max-w-[45%]">
+    <!-- 🧠 Thesis Panel (lock-in animation) -->
+    <div id="thesis-box" class="flex-1 md:flex-none md:max-w-[45%] opacity-0 scale-105 transition-all duration-700 animate-lock">
       <h2 class="text-3xl font-semibold mb-4 text-blue-400 text-center">Your Thesis</h2>
 
-      <!-- Text display box mimicking textarea -->
       <div class="w-full border border-gray-700 rounded-lg bg-gray-800 shadow-md">
         <div class="flex items-center justify-between px-3 py-2 border-b border-gray-700 bg-gray-900 rounded-t-lg">
           <div class="flex items-center space-x-2 text-gray-400">
@@ -45,20 +77,16 @@
       </div>
     </div>
 
-    <!-- 🧩 Results Panel -->
-    <div id="results" class="flex-1 bg-gray-800 border border-gray-700 rounded-xl p-8 shadow-lg">
+    <!-- 🧩 Results Panel (slide-in animation) -->
+    <div id="results" class="flex-1 bg-gray-800 border border-gray-700 rounded-xl p-8 shadow-lg opacity-0 translate-x-full">
       <h2 class="text-3xl font-semibold mb-6 text-blue-400 text-center">Recommended Articles</h2>
-
-      <!-- 🗨️ Quote -->
       <div id="quote" class="italic text-gray-400 mb-6 border-l-4 border-blue-500 pl-4 text-lg"></div>
-
-      <!-- 📰 Articles -->
       <div id="articles"></div>
     </div>
   </div>
 
   <!-- 🔙 Back Button -->
-  <div class="text-center mt-10">
+  <div class="text-center mt-10 opacity-0 transition-opacity duration-700 delay-1000" id="backButton">
     <button onclick="window.location.href='upload.html'"
       class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg focus:ring-4 focus:ring-blue-400 transition">
       <i class="bi bi-arrow-left"></i> Back
@@ -70,15 +98,15 @@
     const thesis = localStorage.getItem("uploadedThesis");
     const responseData = JSON.parse(localStorage.getItem("backendResponse"));
 
-    // Set textarea text
+    // Display thesis
     const thesisBox = document.getElementById("thesisText");
     thesisBox.value = thesis || "No thesis found.";
 
-    // Display quote
-    document.getElementById("quote").textContent = responseData?.quote || "";
-
-    // Display articles
+    // Display quote and results
+    const quoteDiv = document.getElementById("quote");
     const articlesDiv = document.getElementById("articles");
+    quoteDiv.textContent = responseData?.quote || "";
+
     if (responseData && responseData.results) {
       responseData.results.forEach(article => {
         const card = document.createElement("div");
@@ -93,12 +121,27 @@
           <p class="text-sm text-blue-400 mb-1">Keywords: ${article.keywords.join(", ")}</p>
           <p class="italic text-gray-400 text-sm">Why chosen: ${article.why_chosen}</p>
         `;
-
         articlesDiv.appendChild(card);
       });
     } else {
       articlesDiv.innerHTML = "<p class='text-gray-400'>No results found.</p>";
     }
+
+    // ✨ Trigger slide-in animation sequence
+    window.addEventListener("load", () => {
+      // Lock-in animation for thesis (already animates on load)
+      const results = document.getElementById("results");
+      const backButton = document.getElementById("backButton");
+
+      setTimeout(() => {
+        results.classList.remove("translate-x-full", "opacity-0");
+        results.classList.add("animate-slide");
+      }, 800); // after thesis locks in
+
+      setTimeout(() => {
+        backButton.classList.remove("opacity-0");
+      }, 1800);
+    });
   </script>
 </body>
 </html>
