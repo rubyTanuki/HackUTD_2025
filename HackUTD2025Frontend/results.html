@@ -4,107 +4,90 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Thesis Results</title>
+
+  <!-- Tailwind + Flowbite + Bootstrap Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/flowbite@1.6.5/dist/flowbite.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background-color: #fafafa;
-      margin: 40px;
-      display: grid;
-      grid-template-columns: 1fr 2fr;
-      gap: 30px;
-    }
-
-    #thesis-box, .card {
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      padding: 20px;
-    }
-
-    h2 {
-      margin-top: 0;
-    }
-
-    .quote {
-      font-style: italic;
-      font-size: 18px;
-      color: #555;
-      margin-bottom: 20px;
-    }
-
-    .card {
-      margin-bottom: 20px;
-      transition: transform 0.2s ease;
-    }
-
-    .card:hover {
-      transform: translateY(-4px);
-    }
-
-    .keywords {
-      color: #007bff;
-      font-size: 14px;
-    }
-
-    .why {
-      color: #555;
-      font-style: italic;
-      margin-top: 8px;
-    }
-
-    a {
-      color: #28a745;
-      text-decoration: none;
-    }
-
-    a:hover {
-      text-decoration: underline;
+      background: #0f172a;
+      padding: 40px;
     }
   </style>
 </head>
-<body>
-  <!-- 🧠 Thesis section -->
-  <div id="thesis-box">
-    <h2>Your Thesis</h2>
-    <p id="thesisText"></p>
+<body class="dark:bg-gray-900 text-white">
+
+  <!-- 🔹 Two side-by-side panels -->
+  <div class="max-w-7xl mx-auto flex flex-col md:flex-row gap-10 items-start">
+
+    <!-- 🧠 Thesis Panel (auto-sized based on text) -->
+    <div id="thesis-box" class="bg-gray-800 border border-gray-700 rounded-xl p-8 shadow-lg flex-1 md:flex-none md:max-w-[45%]">
+      <h2 class="text-3xl font-semibold mb-6 text-blue-400">Your Thesis</h2>
+      <p id="thesisText" class="text-gray-300 text-lg leading-relaxed whitespace-pre-line"></p>
+    </div>
+
+    <!-- 🧩 Results Panel (flexible, fills remaining space) -->
+    <div id="results" class="flex-1 bg-gray-800 border border-gray-700 rounded-xl p-8 shadow-lg">
+      <h2 class="text-3xl font-semibold mb-6 text-blue-400">Recommended Articles</h2>
+
+      <!-- 🗨️ Quote -->
+      <div id="quote" class="italic text-gray-400 mb-6 border-l-4 border-blue-500 pl-4 text-lg"></div>
+
+      <!-- 📰 Articles -->
+      <div id="articles"></div>
+    </div>
   </div>
 
-  <!-- 🧩 Articles section -->
-  <div id="results">
-    <h2>Recommended Articles</h2>
-    <div id="quote" class="quote"></div>
+  <!-- 🔙 Back button (outside boxes, centered) -->
+  <div class="text-center mt-10">
+    <button onclick="window.location.href='upload.html'"
+      class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg focus:ring-4 focus:ring-blue-400 transition">
+      <i class="bi bi-arrow-left"></i> Back
+    </button>
   </div>
 
   <script>
-    // 🧠 Get data saved from upload page
+    // 🧠 Retrieve stored data
     const thesis = localStorage.getItem("uploadedThesis");
     const responseData = JSON.parse(localStorage.getItem("backendResponse"));
 
-    // Display thesis text
-    document.getElementById("thesisText").textContent = thesis || "No thesis found.";
+    // Display thesis
+    const thesisBox = document.getElementById("thesisText");
+    thesisBox.textContent = thesis || "No thesis found.";
 
-    // Display the quote
+    // Auto-adjust width based on text length
+    if (thesis && thesis.length > 800) {
+      document.getElementById("thesis-box").classList.add("md:max-w-[55%]");
+    } else if (thesis && thesis.length < 300) {
+      document.getElementById("thesis-box").classList.add("md:max-w-[35%]");
+    }
+
+    // Display quote
     document.getElementById("quote").textContent = responseData?.quote || "";
 
-    // Display mock article cards
+    // Display articles
+    const articlesDiv = document.getElementById("articles");
     if (responseData && responseData.results) {
-      const resultsDiv = document.getElementById("results");
-
       responseData.results.forEach(article => {
         const card = document.createElement("div");
-        card.className = "card";
+        card.className =
+          "bg-gray-900 border border-gray-700 rounded-lg p-5 mb-6 shadow-md hover:shadow-lg hover:-translate-y-1 transition-transform";
 
         card.innerHTML = `
-          <h3><a href="${article.link}" target="_blank">${article.title}</a></h3>
-          <p>${article.description}</p>
-          <p class="keywords">Keywords: ${article.keywords.join(", ")}</p>
-          <p class="why">Why chosen: ${article.why_chosen}</p>
+          <h3 class="text-xl font-semibold text-white mb-2">
+            <a href="${article.link}" target="_blank" class="hover:text-blue-400">${article.title}</a>
+          </h3>
+          <p class="text-gray-300 mb-2">${article.description}</p>
+          <p class="text-sm text-blue-400 mb-1">Keywords: ${article.keywords.join(", ")}</p>
+          <p class="italic text-gray-400 text-sm">Why chosen: ${article.why_chosen}</p>
         `;
 
-        resultsDiv.appendChild(card);
+        articlesDiv.appendChild(card);
       });
     } else {
-      document.getElementById("results").innerHTML += "<p>No results found.</p>";
+      articlesDiv.innerHTML = "<p class='text-gray-400'>No results found.</p>";
     }
   </script>
 </body>
